@@ -2,6 +2,12 @@
 
 class S1_Controller_Rest_Template extends Controller
 {
+  const FORMAT_XML = "XML";
+  const FORMAT_CSV = "CSV";
+  const FORMAT_JSON = "JSON";
+  const FORMAT_DEBUG = "DEBUG";
+
+
   public $template =  's1/rest/api';
   public $auto_render = TRUE;
   
@@ -18,8 +24,66 @@ class S1_Controller_Rest_Template extends Controller
    */
   public $auth_required = FALSE;   /* Access control for the whole controller */
   public $secure_actions = FALSE;  /* Access control for individual actions */
-  
 
+   
+  public function request_format()
+  {
+    $format = $this->request->param('format');
+    switch($format)
+      {
+      case 'xml':
+	return self::FORMAT_XML;
+      case 'csv':
+	return self::FORMAT_CSV;
+      case 'json':
+	return self::FORMAT_JSON;
+      case 'debug':
+	return self::FORMAT_DEBUG;
+      }
+    
+    if( $this->request->is_ajax() === TRUE )
+      {
+	return self::FORMAT_JSON;
+      }
+    
+    return self::FORMAT_XML;
+  }
+  
+  public function throw_error($code, $messages)
+  {
+    if( is_array($messages) === FALSE )
+      {
+	$messages = array($messages);
+      }
+
+    /* Stop gap to turn messages into array instead of hash */
+    $messages = array_values($messages);
+
+    $content = NULL;
+    $format = $this->request_format();
+    switch($format)
+      {
+      default:
+      case self::FORMAT_XML:
+	$this->response->headers('Content-Type', 'application/xml; charset=utf-8');
+	$content = $this->template->content = View::factory('s1/rest/common/error/xml');
+	break;
+      case self::FORMAT_JSON:
+	$this->response->headers('Content-Type', 'application/json; charset=utf-8');
+	$content = $this->template->content = View::factory('s1/rest/common/error/json');
+	break;
+      }
+
+    $content->code = $code;
+    $content->messages = $messages;
+    
+    $this->response->status($code);
+    $this->after();
+
+    echo $this->response->send_headers(TRUE)->body();
+    exit(0);
+  }
+  
   protected function user_has_access($access_required, Model_User $user)
   {
     if( $access_required === FALSE )
@@ -65,22 +129,26 @@ class S1_Controller_Rest_Template extends Controller
       }
   }
 
-
-  protected function check_access()
+  protected function check_access($user = NULL)
   {
-    $user = NULL;
-    if( $this->user === NULL )
+    if( $user === NULL )
       {
-	if( Auth::instance()->logged_in() === TRUE )
+	if( $this->user === NULL )
 	  {
-	    $this->user = $user = Auth::instance()->get_user();
+	    if( Auth::instance()->logged_in() === TRUE )
+	      {
+		$this->user = $user = Auth::instance()->get_user();
+	      }
+	    else
+	      {
+		$this->user = $user = ORM::factory('User');
+	      }
 	  }
 	else
 	  {
-	    $this->user = $user = ORM::factory('User');
+	    $user = $this->user;
 	  }
       }
-
 
     $action_name = $this->request->action();
     if( $this->user_has_access($this->auth_required, $user) === TRUE && 
@@ -96,16 +164,17 @@ class S1_Controller_Rest_Template extends Controller
   {
     parent::before();
    
-    if( $this->check_access() === FALSE )
-      {
-	$this->respond_error('User does not have required roles');
-      }
     
     if ($this->auto_render)
       {
 	// Initialize empty values
 	$this->template = View::factory($this->template);
 	$this->template->content = '';
+      }
+
+    if( $this->check_access() === FALSE )
+      {
+	$this->throw_error(401, 'User does not have required roles');
       }
   }
   
@@ -116,5 +185,10 @@ class S1_Controller_Rest_Template extends Controller
 	$this->response->body($this->template->render());
       }
     parent::after();
+  }
+
+  protected function is_assoc(array $arr)
+  {
+    return (bool)count(array_filter(array_keys($arr), 'is_string'));
   }
 }

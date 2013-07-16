@@ -35,7 +35,21 @@ function format_item($xParent, $DataItem)
 	  $label = strtolower($label) . '_id';
 	}
       
-      $xParent->{$label} = $value;
+      /* Work around the casting of bools to strings:
+       * http://www.php.net/manual/en/language.types.string.php#language.types.string.casting
+       */
+      if( $value === TRUE )
+	{
+	  $xParent->{$label} = 'true';
+	}
+      else if( $value === FALSE )
+	{
+	  $xParent->{$label} = 'false';
+	}
+      else
+	{
+	  $xParent->{$label} = $value;
+	}
     }
 }
 

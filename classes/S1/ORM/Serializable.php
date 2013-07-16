@@ -68,7 +68,7 @@ class S1_ORM_Serializable extends ORM
       {
       case 'location':
 	$object_name = explode("_", $this->object_plural());
-	return URL::site(Route::get( Kohana::$config->load('oauth.api.route') )->uri(array('controller' => end($object_name), 'format' => '', 'id' => $this->getSerializationId())));
+	return URL::site(Route::get( Kohana::$config->load('kohana-s1-rest.api.route') )->uri(array('controller' => end($object_name), 'id' => $this->getSerializationId())));
       default:
 	return parent::__get($column);
       }

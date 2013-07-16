@@ -4,6 +4,8 @@ class S1_Controller_Rest_Template extends Controller
 {
   public $template =  's1/rest/api';
   public $auto_render = TRUE;
+  
+  protected $user = NULL;
 
 
   /*

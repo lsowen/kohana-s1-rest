@@ -25,7 +25,7 @@ function format_item($DataItem)
 	    }
 	}
       
-      if( $value instanceof S1_ORM_Serializable )
+      if( $value instanceof S1_REST_ISerializable )
 	{
 	  $value = $value->getSerializationId();
 	  $label = strtolower($label) . '_id';

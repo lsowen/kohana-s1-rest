@@ -1,6 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
-class S1_ORM_Serializable extends ORM
+class S1_ORM_Serializable extends ORM implements S1_REST_ISerializable
 {
   /* 
    * Why extend ORM instead of S1_ORM?

@@ -8,7 +8,25 @@ class S1_ORM_Serializable extends ORM implements S1_REST_ISerializable
    * is an instanceof ORM (eg add or count_relations).
    */
 
-  public $_serializationArray = NULL;
+  protected $_serializationArray = NULL;
+
+  /*
+   * Name of API endpoint for this object type
+   */
+  protected $_public_object_name = NULL;
+
+  public function public_object_name()
+  {
+    if( is_null( $this->_public_object_name ) === FALSE )
+      {
+	return $this->_public_object_name;
+      }
+    else
+      {
+	$object_name = explode("_", $this->object_name());
+	return end($object_name);
+      }
+  }
 
   public function getSerializationId()
   {
@@ -17,7 +35,11 @@ class S1_ORM_Serializable extends ORM implements S1_REST_ISerializable
   
   public function getSerializationArray()
   {
-    if( $this->_serializationArray === NULL )
+    if( $this->_serializationArray !== NULL )
+      {
+	return $this->_serializationArray;
+      }
+    else
       {
 	$table_columns = array_keys($this->_table_columns);
 	foreach($table_columns as $key => $value)
@@ -29,10 +51,6 @@ class S1_ORM_Serializable extends ORM implements S1_REST_ISerializable
 	  }
 
 	return array_flip($table_columns) + array('location' => '') + $this->belongs_to();
-      }
-    else
-      {
-	return $this->_serializationArray;
       }
   }
 
@@ -67,8 +85,8 @@ class S1_ORM_Serializable extends ORM implements S1_REST_ISerializable
     switch($column)
       {
       case 'location':
-	$object_name = explode("_", $this->object_plural());
-	return URL::site(Route::get( Kohana::$config->load('kohana-s1-rest.api.route') )->uri(array('controller' => end($object_name), 'id' => $this->getSerializationId())));
+	$object_name = Inflector::plural($this->public_object_name());
+	return URL::site(Route::get( Kohana::$config->load('kohana-s1-rest.api.route') )->uri(array('controller' => $object_name, 'id' => $this->getSerializationId())));
       default:
 	return parent::__get($column);
       }

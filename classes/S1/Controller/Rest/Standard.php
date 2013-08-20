@@ -121,7 +121,6 @@ class S1_Controller_Rest_Standard extends S1_Controller_Rest
     $sql = $this->handle_get_list_search($sql);
     $content->Pagination = $this->paginate_results($sql);
 
-    $sql = $this->handle_get_list_search($sql);
     $sql = $this->handle_get_list_sort($sql);
     $content->Data = $sql->find_all();
 
@@ -237,8 +236,11 @@ class S1_Controller_Rest_Standard extends S1_Controller_Rest
 
   protected function paginate_results(ORM $sql)
   {
+    $sql->reset(FALSE); /* Don't reset after next query */
+    $total = (int) $sql->count_all();
+
     $Pagination = array(
-			'total'  => (int) $sql->count_all(),
+			'total'  => $total,
 			'offset' => ($this->request->query('offset') === NULL) ? 0 : (int)$this->request->query('offset'),
 			'limit'  => ($this->request->query('limit') === NULL) ? 10 : (int)$this->request->query('limit'),
 			);

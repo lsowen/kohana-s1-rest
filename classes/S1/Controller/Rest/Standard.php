@@ -73,7 +73,28 @@ class S1_Controller_Rest_Standard extends S1_Controller_Rest
     if($this->request->query('sort') !== NULL)
       {
 	$sorts = explode(",", $this->request->query('sort'));
+
 	$sort_options = $sql->getSerializationArray();
+	/*
+	 * Below creates an array of "Interval Field Name" => "External Field Name"
+	 */
+	foreach($sort_options as $key => &$value)
+	  {
+	    if( is_array($value) === TRUE && isset($value['label']) === TRUE )
+	      {
+		$value = $value['label'];
+	      }
+	    else
+	      {
+		$value = $key;
+	      }
+	  }
+	/*
+	 * Flips it so it becomes an array of "External Field Name" => "Internal Field Name"
+	 */
+	$sort_options = array_flip($sort_options);
+	
+
 	foreach($sorts as $sort)
 	  {
 	    $sort_dir = 'ASC';
@@ -91,7 +112,7 @@ class S1_Controller_Rest_Standard extends S1_Controller_Rest
 	    
 	    if(array_key_exists($sort, $sort_options))
 	      {
-		$sql->order_by($sort, $sort_dir);
+		$sql->order_by($sort_options[$sort], $sort_dir);
 	      }
 	    
 	  }

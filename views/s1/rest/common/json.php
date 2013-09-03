@@ -28,12 +28,12 @@ function format_item($DataItem)
       if( $value instanceof S1_REST_ISerializable )
 	{
 	  $value = $value->getSerializationId();
-	  $label = strtolower($label) . '_id';
+	  $label = strtolower($label);
 	}
       else if( $value instanceof ORM )
 	{
 	  $value = $value->pk();
-	  $label = strtolower($label) . '_id';
+	  $label = strtolower($label);
 	}
       
       $result[$label] = $value;

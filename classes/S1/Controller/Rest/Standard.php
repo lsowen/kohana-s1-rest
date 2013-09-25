@@ -15,6 +15,9 @@ class S1_Controller_Rest_Standard extends S1_Controller_Rest
 		 Request::PUT => array(
 				       'handle_put_item' => array(),
 				       ),
+		 Request::DELETE => array(
+				       'handle_delete_item' => array(),
+				       ),
 		 Request::POST => array(
 					'handle_post_item' => array('filter' => array('id' => NULL)),
 					),
@@ -200,6 +203,54 @@ class S1_Controller_Rest_Standard extends S1_Controller_Rest
 	$content->Data = $Item;
 	$ItemName = isset($this->ItemName) ? $this->ItemName : $this->ItemType;
 	$content->DataName = strtolower($ItemName);
+      }
+    else
+      {
+	$this->throw_error(404, 'id not found');
+      }
+  }
+
+  /* 
+   * Functions associated with DELETE requests to delete a single item
+   */
+
+  protected function handle_delete_item_validate($Item, $args)
+  {
+    /*
+     * Return TRUE to allow delete
+     * Return array of errors when stopping delete action
+     */
+    return array();
+  }
+
+  protected function handle_delete_item($args = array())
+  {
+    $args = $args + array('key' => 'id');
+    $Item = ORM::factory($this->ItemType, array($args['key'] => $this->request->param('id')));
+    
+    
+    if( $Item->loaded() )
+      {
+	$validation_errors = $this->handle_delete_item_validate($Item, $args);
+	if( $validation_errors !== TRUE )
+	  {
+	    $this->throw_error(400, $validation_errors);
+	  }
+
+	try 
+	  {
+	    $Item = $Item->delete();
+	  }	
+	catch(Kohana_Exception $e)
+	  {
+	    $errors = $e->errors('s1/rest');
+	    $this->throw_error(400, $errors);
+	  }
+
+	$this->auto_render = FALSE;
+	$this->template = NULL;
+	$this->response->status(204);
+	$this->response->body(NULL);
       }
     else
       {
